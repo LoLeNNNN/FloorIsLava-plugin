@@ -18,6 +18,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
+import org.example.Main;
+import static org.example.Main.*;
 
 public class SEventHandler implements Listener {
     @EventHandler
@@ -30,29 +32,35 @@ public class SEventHandler implements Listener {
         //NrMaterial.add(Material.CRIMSON_NYLIUM);
         //NrMaterial.add(Material.NETHER_BRICK);
 
-
         if (b.getType() == Material.NETHERRACK){
-            e.getPlayer().damage(2);
+            e.getPlayer().damage(instance.getConfig().getInt("blocks.ndamage"));
             Player player = e.getPlayer();
             //player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_ON_FIRE, 1f,1f);
             //comented bc im rt and dk h2 m delay
-            player.setFireTicks(400);
+            if (instance.getConfig().getBoolean("blocks.fire") == true) {
+                player.setFireTicks(400);
             }
+        }
         if (b.getType() == Material.CRIMSON_NYLIUM){
             e.getPlayer().damage(2);
             Player player = e.getPlayer();
-            player.setFireTicks(400);
+            if (instance.getConfig().getBoolean("blocks.fire") == true) {
+                player.setFireTicks(400);
+            }
         }
         if (b.getType() == Material.NETHER_BRICK){
-            e.getPlayer().damage(2);
+            e.getPlayer().damage(instance.getConfig().getInt("blocks.ndamage"));
             Player player = e.getPlayer();
-            player.setFireTicks(400);
-        }
-        if (b.getType() == Material.SOUL_SAND) {
-            Player player = e.getPlayer();
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 300, 2));
+            if (instance.getConfig().getBoolean("blocks.fire") == true) {
+                player.setFireTicks(400);
+            }
+        if ((instance.getConfig().getBoolean("blocks.doSoulSandWitherEffect")) == true) {
+            if (b.getType() == Material.SOUL_SAND) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 300, 2));
+            }
         }
         }
     }
+        }
     //todo make list from config yml
-    //btw sry for bad codding
+    //if (b.getType() == Material.valueOf(instance.getConfig().getString("blocks.nether"))) {}

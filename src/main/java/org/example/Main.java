@@ -10,13 +10,17 @@ import org.example.handler.SEventHandler;
 
 import java.net.http.WebSocket;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main extends JavaPlugin implements Listener {
+
+public final class Main extends JavaPlugin {
+
+    public static Main instance;
+
     @Override
     public void onEnable() {
+        instance = this;
         getServer().getLogger().info("[NetherDamageFire] Hello, world!");
         getServer().getPluginManager().registerEvents(new SEventHandler(), this);
+        saveDefaultConfig();
     }
 
     @Override
@@ -28,4 +32,6 @@ public class Main extends JavaPlugin implements Listener {
     public void handleJoinEvent(PlayerJoinEvent event) {
         Player player = event.getPlayer();
     }
+
+    public static Main getInstance() {return instance; }
 }
