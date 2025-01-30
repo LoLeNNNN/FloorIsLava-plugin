@@ -7,7 +7,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.example.handler.SEventHandler;
-
 import java.net.http.WebSocket;
 
 

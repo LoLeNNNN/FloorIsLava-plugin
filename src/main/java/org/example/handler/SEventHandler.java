@@ -1,66 +1,80 @@
 package org.example.handler;
 
-import java.net.http.WebSocket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitTask;
-import org.example.Main;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import static org.example.Main.*;
 
+
+
 public class SEventHandler implements Listener {
+    private final Set<UUID> playersOnDangerousBlocks = new HashSet<>();
+
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
-        Location loc = e.getPlayer().getLocation().clone().subtract(0, 1, 0);
+        Location loc = e.getPlayer().getLocation().clone().subtract(0, 0.5, 0);
         Block b = loc.getBlock();
+        Player player = e.getPlayer();
+        ItemStack boots = player.getInventory().getBoots();
+        UUID playerId = player.getUniqueId();
+        if (b.getType() == Material.NETHERRACK || b.getType() == Material.CRIMSON_NYLIUM || b.getType() == Material.NETHER_BRICK) {
 
-        //List<Material> NrMaterial = new ArrayList<>();
-        //NrMaterial.add(Material.NETHERRACK);
-        //NrMaterial.add(Material.CRIMSON_NYLIUM);
-        //NrMaterial.add(Material.NETHER_BRICK);
+            if (boots != null && boots.getType() != Material.AIR) {
+                if (!playersOnDangerousBlocks.contains(playerId)) {
+                    player.sendMessage(ChatColor.RED + "Твои ботинки плавятся!");
+                    playersOnDangerousBlocks.add(playerId);
+                }
 
-        if (b.getType() == Material.NETHERRACK){
-            e.getPlayer().damage(instance.getConfig().getInt("blocks.ndamage"));
-            Player player = e.getPlayer();
-            //player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_ON_FIRE, 1f,1f);
-            //comented bc im rt and dk h2 m delay
-            if (instance.getConfig().getBoolean("blocks.fire") == true) {
-                player.setFireTicks(400);
+                ItemMeta meta = boots.getItemMeta();
+                Damageable damageable = (Damageable) meta;
+                int maxDurability = boots.getType().getMaxDurability();
+                int currentDamage = damageable.getDamage();
+                damageable.setDamage(currentDamage + 1);
+                boots.setItemMeta(meta);
+                player.getInventory().setBoots(boots);
+                if (damageable.getDamage() >= maxDurability) {
+                    player.getInventory().setBoots(null);
+                }
+            } else {
+                e.getPlayer().damage(instance.getConfig().getInt("blocks.ndamage"));
+                if (instance.getConfig().getBoolean("blocks.fire")) {
+                    player.setFireTicks(400);
+
+                }
             }
-        }
-        if (b.getType() == Material.CRIMSON_NYLIUM){
-            e.getPlayer().damage(2);
-            Player player = e.getPlayer();
-            if (instance.getConfig().getBoolean("blocks.fire") == true) {
-                player.setFireTicks(400);
+        } else {
+            if (b.getType() != Material.AIR) {
+                if (playersOnDangerousBlocks.contains(playerId)) {
+                    playersOnDangerousBlocks.remove(playerId);
+                }
             }
-        }
-        if (b.getType() == Material.NETHER_BRICK){
-            e.getPlayer().damage(instance.getConfig().getInt("blocks.ndamage"));
-            Player player = e.getPlayer();
-            if (instance.getConfig().getBoolean("blocks.fire") == true) {
-                player.setFireTicks(400);
+            if (instance.getConfig().getBoolean("blocks.doSoulSandWitherEffect")) {
+                if (b.getType() == Material.SOUL_SAND || b.getType() == Material.SOUL_SOIL) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 300, 2));
+                }
             }
-        if ((instance.getConfig().getBoolean("blocks.doSoulSandWitherEffect")) == true) {
-            if (b.getType() == Material.SOUL_SAND) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 300, 2));
-            }
-        }
         }
     }
-        }
+}
     //todo make list from config yml
+    //todo damageble on sm blcks
     //if (b.getType() == Material.valueOf(instance.getConfig().getString("blocks.nether"))) {}
