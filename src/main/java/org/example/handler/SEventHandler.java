@@ -3,16 +3,17 @@ package org.example.handler;
 import java.util.UUID;
 
 
-import org.bukkit.ChatColor;
-import org.bukkit.Color;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ItemType;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -28,6 +29,7 @@ import static org.example.Main.*;
 
 public class SEventHandler implements Listener {
     private final Set<UUID> playersOnDangerousBlocks = new HashSet<>();
+    private final Set<UUID> playersOnBasaltDeltas = new HashSet<>();
 
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
@@ -36,42 +38,74 @@ public class SEventHandler implements Listener {
         Player player = e.getPlayer();
         ItemStack boots = player.getInventory().getBoots();
         UUID playerId = player.getUniqueId();
-        if (b.getType() == Material.NETHERRACK || b.getType() == Material.CRIMSON_NYLIUM || b.getType() == Material.NETHER_BRICK) {
+        if (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE) {
+            if (b.getType() == Material.NETHERRACK || b.getType() == Material.CRIMSON_NYLIUM || b.getType() == Material.NETHER_BRICK || b.getType() == Material.NETHER_GOLD_ORE || b.getType() == Material.NETHER_QUARTZ_ORE || b.getType() == Material.NETHER_BRICKS) {
+                if (boots != null && boots.getType() != Material.AIR) {
+                    if (boots != null && boots.getType() != Material.NETHERITE_BOOTS) {
+                        if (!playersOnDangerousBlocks.contains(playerId)) {
+                            player.sendMessage(ChatColor.RED + "Твои ботинки плавятся!");
+                            playersOnDangerousBlocks.add(playerId);
+                        }
 
-            if (boots != null && boots.getType() != Material.AIR) {
-                if (!playersOnDangerousBlocks.contains(playerId)) {
-                    player.sendMessage(ChatColor.RED + "Твои ботинки плавятся!");
-                    playersOnDangerousBlocks.add(playerId);
+                        ItemMeta meta = boots.getItemMeta();
+                        Damageable damageable = (Damageable) meta;
+                        int maxDurability = boots.getType().getMaxDurability();
+                        int currentDamage = damageable.getDamage();
+                        damageable.setDamage(currentDamage + 1);
+                        boots.setItemMeta(meta);
+                        player.getInventory().setBoots(boots);
+                        if (damageable.getDamage() >= maxDurability) {
+                            player.getInventory().setBoots(null);
+                        }
+                    }
+                }else {
+                    e.getPlayer().damage(instance.getConfig().getInt("config.damage"));
+                    if (instance.getConfig().getBoolean("config.fire")) {
+                        player.setFireTicks(400);
+
+                    }
                 }
 
-                ItemMeta meta = boots.getItemMeta();
-                Damageable damageable = (Damageable) meta;
-                int maxDurability = boots.getType().getMaxDurability();
-                int currentDamage = damageable.getDamage();
-                damageable.setDamage(currentDamage + 1);
-                boots.setItemMeta(meta);
-                player.getInventory().setBoots(boots);
-                if (damageable.getDamage() >= maxDurability) {
-                    player.getInventory().setBoots(null);
-                }
             } else {
-                e.getPlayer().damage(instance.getConfig().getInt("blocks.ndamage"));
-                if (instance.getConfig().getBoolean("blocks.fire")) {
-                    player.setFireTicks(400);
-
+                if (b.getType() != Material.AIR) {
+                    if (playersOnDangerousBlocks.contains(playerId)) {
+                        playersOnDangerousBlocks.remove(playerId);
+                    }
                 }
-            }
-        } else {
-            if (b.getType() != Material.AIR) {
-                if (playersOnDangerousBlocks.contains(playerId)) {
-                    playersOnDangerousBlocks.remove(playerId);
+                if (instance.getConfig().getBoolean("config.doSoulSandWitherEffect")) {
+                    if (b.getType() == Material.SOUL_SAND || b.getType() == Material.SOUL_SOIL) {
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 300, 2));
+                    }
                 }
-            }
-            if (instance.getConfig().getBoolean("blocks.doSoulSandWitherEffect")) {
-                if (b.getType() == Material.SOUL_SAND || b.getType() == Material.SOUL_SOIL) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 300, 2));
+                if (instance.getConfig().getBoolean("config.doWarpedNyliumLevitation")) {
+                    if (b.getType() == Material.WARPED_NYLIUM) {
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 100, 1));
+                    }
                 }
+                if (instance.getConfig().getBoolean("config.doDustInBasalDeltas")) {
+                    if (player.getLocation().getBlock().getBiome() == Biome.BASALT_DELTAS) {
+                        if (player.getInventory().getHelmet() == null || player.getInventory().getHelmet().getType() != Material.CARVED_PUMPKIN) {
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, -1, 1));
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, -1, 1));
+                            if (!playersOnBasaltDeltas.contains(playerId)) {
+                                player.sendMessage(ChatColor.GRAY + "В ваши глаза залетела пыль...");
+                                playersOnBasaltDeltas.add(playerId);
+                            }
+                        } else if (player.getInventory().getHelmet().getType() == Material.CARVED_PUMPKIN) {
+                            player.removePotionEffect(PotionEffectType.BLINDNESS);
+                            player.removePotionEffect(PotionEffectType.SLOWNESS);
+                            playersOnBasaltDeltas.remove(playerId);
+                        }
+                    }
+                 else {
+                     if (playersOnBasaltDeltas.contains(playerId)) {
+                    player.removePotionEffect(PotionEffectType.BLINDNESS);
+                    player.removePotionEffect(PotionEffectType.SLOWNESS);
+                    playersOnBasaltDeltas.remove(playerId);
+                    }
+                 }
             }
+        }
         }
     }
 }

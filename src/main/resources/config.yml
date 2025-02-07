@@ -1,6 +1,6 @@
-blocks:
-  ndamage: 2
+config:
+  damage: 2
   fire: true
   doSoulSandWitherEffect: true
-  #todo make import from list below
-  #  nether: "NETHERRACK", "CRIMSON_NYLIUM", "NETHER_BRICK"
+  doDustInBasalDeltas: true
+  doWarpedNyliumLevitation: true
