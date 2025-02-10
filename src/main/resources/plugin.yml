@@ -1,5 +1,5 @@
-name: NetherDamagePlugin
-version: 1.0.1
+name: NetherComplication
+version: 1.2
 main: org.example.Main
 api-version: 1.21.4
 description: Плагин, который наносит урон игроку, если он стоит на определённом блоке в аду.

@@ -1,6 +1,12 @@
+config-version: 1.2
 config:
-  damage: 2
-  fire: true
-  doSoulSandWitherEffect: true
+  doNetherrackDamage:
+    enabled: true
+    damage: 2
+    fire: true
+  SoulSandWitherEffect:
+    enabled: true
+    effectDuration: 150 #in ticks
+    effectAmplifier: 1
   doDustInBasalDeltas: true
   doWarpedNyliumLevitation: true

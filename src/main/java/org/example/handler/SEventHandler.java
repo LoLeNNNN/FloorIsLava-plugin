@@ -30,7 +30,6 @@ import java.util.UUID;
 import static org.example.Main.*;
 
 
-
 public class SEventHandler implements Listener {
     private final Set<UUID> playersOnDangerousBlocks = new HashSet<>();
     private final Set<UUID> playersOnBasaltDeltas = new HashSet<>();
@@ -41,14 +40,16 @@ public class SEventHandler implements Listener {
         this.localeManager = localeManager;
         this.plugin = plugin;
     }
+
     @EventHandler
-        public void onMove (PlayerMoveEvent e){
-            Location loc = e.getPlayer().getLocation().clone().subtract(0, 0.5, 0);
-            Block b = loc.getBlock();
-            Player player = e.getPlayer();
-            ItemStack boots = player.getInventory().getBoots();
-            UUID playerId = player.getUniqueId();
-            if (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE) {
+    public void onMove(PlayerMoveEvent e) {
+        Location loc = e.getPlayer().getLocation().clone().subtract(0, 0.5, 0);
+        Block b = loc.getBlock();
+        Player player = e.getPlayer();
+        ItemStack boots = player.getInventory().getBoots();
+        UUID playerId = player.getUniqueId();
+        if (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE) {
+            if (instance.getConfig().getBoolean("config.doNetherrackDamage.enabled")) {
                 if (b.getType() == Material.NETHERRACK || b.getType() == Material.CRIMSON_NYLIUM || b.getType() == Material.NETHER_BRICK || b.getType() == Material.NETHER_GOLD_ORE || b.getType() == Material.NETHER_QUARTZ_ORE || b.getType() == Material.NETHER_BRICKS) {
                     if (boots != null && boots.getType() != Material.AIR) {
                         if (boots != null && boots.getType() != Material.NETHERITE_BOOTS) {
@@ -69,22 +70,25 @@ public class SEventHandler implements Listener {
                             }
                         }
                     } else {
-                        e.getPlayer().damage(plugin.getConfig().getInt("config.damage"));
-                        if (instance.getConfig().getBoolean("config.fire")) {
+                        e.getPlayer().damage(plugin.getConfig().getInt("config.doNetherrackDamage.damage"));
+                        if (instance.getConfig().getBoolean("config.doNetherrackDamage.fire")) {
                             player.setFireTicks(400);
 
                         }
                     }
 
-                } else {
-                    if (b.getType() != Material.AIR) {
-                        if (playersOnDangerousBlocks.contains(playerId)) {
-                            playersOnDangerousBlocks.remove(playerId);
-                        }
+                }
+            }
+            else {
+                if (b.getType() != Material.AIR) {
+                    if (playersOnDangerousBlocks.contains(playerId)) {
+                        playersOnDangerousBlocks.remove(playerId);
                     }
-                    if (instance.getConfig().getBoolean("config.doSoulSandWitherEffect")) {
+                }
+            }
+                    if (instance.getConfig().getBoolean("config.SoulSandWitherEffect.enabled")) {
                         if (b.getType() == Material.SOUL_SAND || b.getType() == Material.SOUL_SOIL) {
-                            player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 300, 0));
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, plugin.getConfig().getInt("config.SoulSandWitherEffect.effectDuration"), plugin.getConfig().getInt("config.SoulSandWitherEffect.effectAmplifier")));
                         }
                     }
                     if (instance.getConfig().getBoolean("config.doWarpedNyliumLevitation")) {
@@ -115,10 +119,5 @@ public class SEventHandler implements Listener {
                         }
                     }
                 }
-            }
         }
     }
-
-    //todo make list from config yml
-    //todo damageble on sm blcks
-    //if (b.getType() == Material.valueOf(instance.getConfig().getString("blocks.nether"))) {}
